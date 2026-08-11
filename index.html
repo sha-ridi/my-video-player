@@ -108,13 +108,13 @@
   var menus={mSubs:document.getElementById('mSubs'),mAudio:document.getElementById('mAudio'),
              mSettings:document.getElementById('mSettings'),mPlaylist:document.getElementById('mPlaylist')};
   var openId=null;
-  // panel geometry (percent of the player box), measured from the real screenshots
-  var ROWH=5.82;
+  // panel geometry (percent of the player box), measured from the real screenshots.
+  // firstC = center of first row; pitch = row spacing; pillH = highlight height.
   var GEO={
-    mSubs:    {top:35.6, left:49.3, colW:24.0, gap:0.6, rows:8, cols:2},
-    mAudio:   {top:39.2, left:66.5, colW:31.3, gap:0,   rows:8, cols:1},
-    mSettings:{top:39.2, left:66.5, colW:31.3, gap:0,   rows:8, cols:1},
-    mPlaylist:{top:56.4, left:2.0,  colW:50.5, gap:0,   rows:5, cols:1}
+    mSubs:    {firstC:41.63, pitch:5.78, rows:8, cols:2, left:49.8,  colW:21.0, gap:3.5, pillH:5.51},
+    mAudio:   {firstC:41.63, pitch:5.78, rows:8, cols:1, left:66.95, colW:30.4, gap:0,   pillH:5.51},
+    mSettings:{firstC:41.63, pitch:5.78, rows:8, cols:1, left:66.95, colW:30.4, gap:0,   pillH:5.51},
+    mPlaylist:{firstC:58.89, pitch:5.78, rows:5, cols:1, left:3.12,  colW:48.9, gap:0,   pillH:5.51}
   };
   function hideHL(){ hl.style.display='none'; }
   function close(){ if(openId){menus[openId].classList.remove('show');openId=null;} hideHL(); }
@@ -129,16 +129,17 @@
     var g=GEO[openId]; var r=player.getBoundingClientRect();
     var xp=(e.clientX-r.left)/r.width*100, yp=(e.clientY-r.top)/r.height*100;
     var totalW=g.cols*g.colW+(g.cols-1)*g.gap;
-    if(xp<g.left-1 || xp>g.left+totalW+1 || yp<g.top-1){ hideHL(); return; }
-    var row=Math.floor((yp-g.top)/ROWH);
+    if(xp<g.left-1 || xp>g.left+totalW+1){ hideHL(); return; }
+    var row=Math.round((yp-g.firstC)/g.pitch);
     if(row<0 || row>=g.rows){ hideHL(); return; }
+    var cy=g.firstC+row*g.pitch;
     var col=0;
     if(g.cols===2) col = xp < (g.left+g.colW+g.gap/2) ? 0 : 1;
-    var colLeft=g.left+col*(g.colW+g.gap), inset=0.6;
+    var colLeft=g.left+col*(g.colW+g.gap), inset=0.5;
     hl.style.left=(colLeft+inset)+'%';
-    hl.style.top=(g.top+row*ROWH+ROWH*0.06)+'%';
+    hl.style.top=(cy-g.pillH/2)+'%';
     hl.style.width=(g.colW-2*inset)+'%';
-    hl.style.height=(ROWH*0.88)+'%';
+    hl.style.height=g.pillH+'%';
     hl.style.display='block';
   });
   player.addEventListener('mouseleave',hideHL);
