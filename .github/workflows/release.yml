@@ -1,0 +1,76 @@
+name: Build & Release
+
+# Repeats build/publish-release.ps1 in the cloud so releases are built from the
+# public repo — a prerequisite for SignPath code signing (it verifies that the
+# signed installer was produced by this repo's CI).
+#
+# Run manually from the Actions tab:
+#   * publish = false (default) -> just builds and uploads the installer + ZIP as
+#     downloadable workflow artifacts. Use this to confirm the cloud build works.
+#   * publish = true            -> also creates a dated GitHub Release, like the
+#     local publish-release.ps1 does today.
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Create a public GitHub Release (otherwise just build artifacts)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write # needed by `gh release create`
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # build-release.ps1 fetches mpv, brands it as DinaPlayer.exe, compiles the
+      # installer with the in-box .NET Framework csc.exe, and zips the portable
+      # build with the installer inside. Uses Windows PowerShell 5.1 to match the
+      # local dev environment exactly.
+      - name: Build portable ZIP + installer
+        shell: powershell
+        run: .\build\build-release.ps1
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DinaPlayer
+          path: |
+            dist/DinaPlayer-Setup.exe
+            dist/DinaPlayer-Portable.zip
+          if-no-files-found: error
+
+      # ---------------------------------------------------------------------
+      # Enable AFTER the SignPath Foundation application is approved.
+      # Signs dist/DinaPlayer-Setup.exe, then the ZIP must be rebuilt so the
+      # signed installer is the copy bundled inside it. Requires repo secrets:
+      #   SIGNPATH_API_TOKEN  (secret)   and   SIGNPATH_ORG_ID (variable)
+      # plus a project + signing policy created in the SignPath dashboard.
+      #
+      # - name: Sign installer (SignPath)
+      #   uses: signpath/github-action-submit-signing-request@v1
+      #   with:
+      #     api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+      #     organization-id: ${{ vars.SIGNPATH_ORG_ID }}
+      #     project-slug: dinaplayer
+      #     signing-policy-slug: release-signing
+      #     artifact-configuration-slug: installer
+      #     github-artifact-id: ${{ steps.upload.outputs.artifact-id }}
+      #     wait-for-completion: true
+      #     output-artifact-directory: dist
+      # ---------------------------------------------------------------------
+
+      - name: Publish GitHub Release
+        if: ${{ inputs.publish }}
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = 'v' + (Get-Date -Format 'yyyy.MM.dd.HHmm')
+          gh release create $tag `
+            dist/DinaPlayer-Portable.zip dist/DinaPlayer-Setup.exe `
+            --repo $env:GITHUB_REPOSITORY --title $tag --notes "DinaPlayer $tag"
