@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="assets/dinafaceicon.png" alt="DinaPlayer" width="96" />
-</p>
-
 <h1 align="center">DinaPlayer</h1>
 <p align="center"><sub>VIDEO PLAYER FOR WINDOWS</sub></p>
 
