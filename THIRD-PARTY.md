@@ -4,7 +4,8 @@
 
 The DinaPlayer-authored parts — the Lua scripts in `portable_config/scripts/`
 (everything except the vendored `uosc/`, `thumbfast.lua` and `autoload.lua`,
-which are noted below) and the configuration files in `portable_config/` — are:
+which are noted below), the configuration files in `portable_config/`, the
+installer/updater in `installer/`, and the build scripts in `build/` — are:
 
 **Copyright © 2026 Dina. Licensed under the GNU General Public License, version 3
 or (at your option) any later version (GPL-3.0-or-later).** Full text:
@@ -22,12 +23,11 @@ any distributed derivative must remain open under the GPL.
 source for mpv and the other components is at the upstream links below. The
 license texts are bundled in the [`licenses/`](licenses/) folder.
 
-## The installer is separate and closed-source
+## The installer
 
-`DinaPlayer-Setup.exe` is an independent installer/updater — **Copyright © 2026
-Dina, all rights reserved.** It is not built from any GPL code (it only downloads
-and installs the player), is not part of the player's GPL source, and is **not**
-distributed under the GPL. It is provided as a convenience only.
+`DinaPlayer-Setup.exe` is a small installer/updater built from `installer/` (it
+downloads and installs the player). Its source is included in this repository and
+is licensed under the GPL like the rest of the DinaPlayer code.
 
 ## Components
 

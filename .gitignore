@@ -1,0 +1,27 @@
+# mpv binary and build artifacts (never committed)
+build/vendor/
+build/tmp/
+dist/
+*.zip
+*.7z
+
+# OS junk
+Thumbs.db
+desktop.ini
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# mpv resume/watch-later runtime state (written via portable_config junction)
+portable_config/watch_later/
+# per-machine user settings (Pause / Fullscreen on start, Skip Opening toggles)
+portable_config/pause-on-start.state
+portable_config/volume.state
+portable_config/fullscreen-on-start.state
+portable_config/skip-opening.state
+portable_config/skip-ending.state
+portable_config/track-prefs.state
+portable_config/last-file.state
+portable_config/sub-seek-target.state
+# runtime cache: shader cache + watched/in-progress lists (per-user)
+portable_config/cache/
