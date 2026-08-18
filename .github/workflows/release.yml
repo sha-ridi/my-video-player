@@ -25,7 +25,7 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # build-release.ps1 fetches mpv, brands it as DinaPlayer.exe, compiles the
       # installer with the in-box .NET Framework csc.exe, and zips the portable
@@ -36,7 +36,7 @@ jobs:
         run: .\build\build-release.ps1
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: DinaPlayer
           path: |
