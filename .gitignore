@@ -25,3 +25,7 @@ portable_config/last-file.state
 portable_config/sub-seek-target.state
 # runtime cache: shader cache + watched/in-progress lists (per-user)
 portable_config/cache/
+
+# full-size screenshots kept local only; the site/README use screenshots/web/*.webp
+screenshots/*.png
+example screenshots/

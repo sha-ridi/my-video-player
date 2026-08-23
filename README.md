@@ -9,10 +9,9 @@
 
 ---
 
-- **Resumes right where you stopped**
-- **Skips openings and endings**
-- **Marks which episodes you've watched**
-- **Subtitles and audio stay the same**
+| ![Skips openings and endings](screenshots/web/next-episode.webp) | ![Familiar, intuitive interface](screenshots/web/subtitles.webp) | ![Marks which episodes you've watched](screenshots/web/playlist.webp) |
+|:--:|:--:|:--:|
+| Skips openings and endings | Familiar, intuitive interface | Marks which episodes you've watched |
 
 ---
 
