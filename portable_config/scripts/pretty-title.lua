@@ -135,6 +135,17 @@ local function publish_playlist()
 	mp.set_property_native('user-data/dina-pretty', map)
 end
 
+-- `force-media-title` is a sticky global override: mpv keeps showing our value
+-- until we change it. The catch is that mpv also snapshots the *current*
+-- `media-title` into `playlist/N/title` when it switches entries — and that
+-- happens before `file-loaded` fires for the new file, so the still-forced title
+-- of the *previous* episode would leak into the new entry (every played row ends
+-- up labelled with its neighbour's title). Dropping the override the moment a new
+-- file starts lets mpv record each entry's own real title; `apply_current` then
+-- re-forces our pretty title for the top bar once the file is loaded.
+local function clear_override() mp.set_property('force-media-title', '') end
+
+mp.register_event('start-file', clear_override)
 mp.register_event('file-loaded', apply_current)
 mp.observe_property('playlist', 'native', publish_playlist)
 
