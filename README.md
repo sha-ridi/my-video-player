@@ -1,7 +1,7 @@
 <h1 align="center">DinaPlayer</h1>
 <p align="center"><sub>VIDEO PLAYER FOR WINDOWS</sub></p>
 
-<p align="center"><b>All the comfort of streaming. Free, no ads.</b></p>
+<p align="center">Built on <a href="https://mpv.io">mpv</a> + <a href="https://github.com/tomasklaen/uosc">uosc</a>, preconfigured for Windows — stock mpv with a tweaked config and a few small scripts.</p>
 
 <p align="center">
   <a href="https://github.com/sha-ridi/my-video-player/releases/latest/download/DinaPlayer-Setup.exe"><b>⬇&nbsp; Download for Windows</b></a>
