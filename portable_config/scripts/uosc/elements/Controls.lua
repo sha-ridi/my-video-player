@@ -4,14 +4,18 @@ local CycleButton = require('elements/CycleButton')
 local ManagedButton = require('elements/ManagedButton')
 local Speed = require('elements/Speed')
 
--- DinaPlayer: per-icon size multipliers for bottom control-bar command buttons.
--- The button (hit area + hover chip) stays the same size; only the glyph inside
--- is scaled, to visually balance icons of different visual weight. Keyed by icon
--- name; anything not listed renders at 1. Tweak these values to taste.
+-- DinaPlayer: per-icon size multipliers for bottom control-bar buttons (command
+-- and cycle). The button (hit area + hover chip) stays the same size; only the
+-- glyph inside is scaled, to visually balance icons of different visual weight.
+-- Keyed by icon name; anything not listed renders at 1. For a cycle button each
+-- state's icon is looked up here independently, so only the matching state shrinks
+-- (e.g. crop_free below scales down while the fullscreen button's other state,
+-- fullscreen_exit, stays at 1). Tweak these values to taste.
 local ICON_SCALE = {
 	settings = 0.75,
 	record_voice_over = 0.75, -- audio
 	closed_caption = 0.8, -- subtitles
+	crop_free = 0.8, -- fullscreen (enter) — smaller than the fullscreen_exit state
 }
 
 -- sizing:
@@ -200,7 +204,10 @@ function Controls:init_options()
 					end
 					local state_params = split(state_config, ' *= *')
 					local value, icon = state_params[1], state_params[2] or params[1]
-					states[#states + 1] = {value = value, icon = icon, active = active}
+					-- DinaPlayer: per-state glyph scale, looked up by this state's
+					-- icon (see ICON_SCALE). Lets one state of a cycle button shrink
+					-- without touching the others.
+					states[#states + 1] = {value = value, icon = icon, active = active, icon_scale = ICON_SCALE[icon] or 1}
 				end
 
 				local element = CycleButton:new('control_' .. i, {

@@ -29,6 +29,9 @@ function CycleButton:init(id, props)
 	Button.init(self, id, props)
 
 	self.icon = self.states[1].icon
+	-- DinaPlayer: each state can carry its own glyph scale (see ICON_SCALE in
+	-- Controls.lua), so it must be updated alongside the icon on every change.
+	self.icon_scale = self.states[1].icon_scale or 1
 	self.active = self.states[1].active
 	self.current_state_index = 1
 	self.on_click = function()
@@ -61,6 +64,7 @@ function CycleButton:init(id, props)
 		local index = itable_find(self.states, function(state) return state.value == value end)
 		self.current_state_index = index or 1
 		self.icon = self.states[self.current_state_index].icon
+		self.icon_scale = self.states[self.current_state_index].icon_scale or 1
 		self.active = self.states[self.current_state_index].active
 		request_render()
 	end
