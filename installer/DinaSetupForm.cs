@@ -1,6 +1,7 @@
-// DinaPlayer setup window — dark, minimalist, styled after the player itself.
-// Inter font and the DinaFace watermark are embedded into the exe (see
-// build/build-installer.ps1 /resource flags) so it looks the same on any PC.
+// DinaPlayer setup window — dark, minimalist, styled after the player itself
+// (Inter, the player's greys, rounded rectangles); no images. Inter is embedded
+// into the exe (see build/build-installer.ps1 /resource) so it looks the same
+// on any PC.
 // The app is DPI-aware (see installer/app.manifest); this form scales every
 // pixel dimension by the current DPI so it stays crisp at 125%/150%/… scaling
 // instead of being bitmap-stretched (blurry). Fonts are in points, so they
@@ -44,10 +45,10 @@ class SetupForm : Form
     int P(double v) { return (int)Math.Round(v * S); }
 
     bool isUpdate;
-    bool minimal;                     // /autoupdate: bare progress bar, nothing else
     string existingDir;
     string installDir;               // chosen install location (fresh install)
     FlatLabel lblPath;               // quiet one-line install location
+    LinkText lnkChange;              // "Change", right after the path
     CheckBox chkDefault, chkShortcut;
     Button btnPrimary;
     LinkText lnkRemove;              // update run: quiet "Remove" link
@@ -55,13 +56,12 @@ class SetupForm : Form
     SlimBar bar;                      // slim white progress bar (install / update)
     SlimBar slim;                     // owner-drawn bar used by the minimal window
     CloseButton btnMiniClose;         // revealed only if a /autoupdate run fails
-    static Image _icon;               // app icon shown in the header
-    Rectangle _iconRect;              // where OnPaint draws it (empty in minimal mode)
 
     // Everything in the content column starts at exactly this x — see FlatLabel
     // and DarkCheck, which both had a few pixels of built-in leading padding.
     const int MARGIN = 28;
     const int WIDTH = 470;   // window content width in logical px
+    const float FS = 10.5f;  // the text size (pt); everything but the title is Inter Regular
 
     public SetupForm()
     {
@@ -72,14 +72,12 @@ class SetupForm : Form
         if (PreviewMode == 1) isUpdate = false;
         else if (PreviewMode == 2) { isUpdate = true; if (existingDir == null) existingDir = DinaSetup.DefaultDir(); }
 
-        _icon = _icon ?? LoadIcon("dinaicon.ico");
-
         // Own frame: Windows draws its close glyph at a fixed tiny size, so the
         // caption row below is ours — same left margin as the rest of the column,
         // and a close button we can actually make big. `Text` still feeds the
         // taskbar and alt-tab.
         Text = "DinaPlayer";
-        Font = F(10f, FontStyle.Regular);
+        Font = F(FS, FontStyle.Regular);
         FormBorderStyle = FormBorderStyle.None;
         MaximizeBox = false; MinimizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
@@ -94,7 +92,6 @@ class SetupForm : Form
         if (AutoStart && isUpdate) { BuildMinimal(); return; }
 
         int cap = P(44);
-        int titleY = P(28), titleH = P(34);
         installDir = existingDir ?? DinaSetup.DefaultDir();
 
         // Close button, inset P(5) from the top-right corner.
@@ -105,74 +102,61 @@ class SetupForm : Form
         btnClose.Click += (s, e) => Close();
         Controls.Add(btnClose);
 
-        // Header: app icon (painted in OnPaint at _iconRect) + title, flush left.
-        int icoSz = _icon != null ? P(30) : 0;
-        int icoGap = _icon != null ? P(12) : 0;
-        var titleFont = F(16.5f, FontStyle.Bold);
-        string titleText = isUpdate ? "Update DinaPlayer" : "Install DinaPlayer";
-        int titleX = P(MARGIN) + icoSz + icoGap;
+        // Header, like the site: the name, then what this run does in grey.
         var lblTitle = new FlatLabel {
-            Text = titleText, Font = titleFont, ForeColor = TEXT, BackColor = Color.Transparent,
-            Location = new Point(titleX, titleY),
-            Size = new Size(btnClose.Left - P(8) - titleX, titleH)
+            Text = "DinaPlayer", Font = F(16f, FontStyle.Bold), ForeColor = TEXT, BackColor = Color.Transparent,
+            Location = new Point(P(MARGIN), P(24)), Size = new Size(btnClose.Left - P(8) - P(MARGIN), P(32))
         };
         lblTitle.MouseDown += DragMove;
         Controls.Add(lblTitle);
-        if (icoSz > 0)
-        {
-            int textH = TextRenderer.MeasureText(titleText, titleFont,
-                new Size(int.MaxValue, int.MaxValue), TextFormatFlags.NoPadding).Height;
-            var fam = titleFont.FontFamily;
-            FontStyle ms = fam.IsStyleAvailable(titleFont.Style) ? titleFont.Style
-                : (fam.IsStyleAvailable(FontStyle.Regular) ? FontStyle.Regular : FontStyle.Bold);
-            float descentPx;
-            try { descentPx = titleFont.GetHeight() * fam.GetCellDescent(ms) / (float)fam.GetLineSpacing(ms); }
-            catch { descentPx = textH * 0.18f; }
-            int baseline = titleY + (titleH + textH) / 2 - (int)Math.Round(descentPx);
-            int drop = (int)Math.Round(descentPx * 0.6f);
-            _iconRect = new Rectangle(P(MARGIN), baseline + drop - icoSz, icoSz, icoSz);
-        }
+        var lblMode = new FlatLabel {
+            Text = isUpdate ? "Update" : "Install", Font = F(FS, FontStyle.Regular),
+            ForeColor = MUTED, BackColor = Color.Transparent,
+            Location = new Point(P(MARGIN), lblTitle.Bottom), Size = new Size(lblTitle.Width, P(22))
+        };
+        lblMode.MouseDown += DragMove;
+        Controls.Add(lblMode);
 
-        int y = lblTitle.Bottom + P(26);
+        int y = lblMode.Bottom + P(22);
 
         // Install only: a quiet one-line install location + a "Change" link, instead
         // of a full path field. Most users never touch it.
         if (!isUpdate)
         {
             lblPath = new FlatLabel {
-                Font = F(9.5f, FontStyle.Regular), ForeColor = MUTED, BackColor = Color.Transparent,
+                Font = F(FS, FontStyle.Regular), ForeColor = MUTED, BackColor = Color.Transparent,
                 Location = new Point(P(MARGIN), y), Size = new Size(P(320), P(20))
             };
-            UpdatePathLabel();
             Controls.Add(lblPath);
 
-            var lnkChange = new LinkText {
-                Text = "Change", Font = F(9.5f, FontStyle.Regular), Idle = MUTED, Hot = TEXT,
+            lnkChange = new LinkText {
+                Text = "Change", Font = F(FS, FontStyle.Regular), Idle = MUTED, Hot = TEXT,
                 ForeColor = MUTED, BackColor = Color.Transparent,
-                Location = new Point(P(MARGIN) + P(326), y), Size = new Size(P(80), P(20))
+                Location = new Point(lblPath.Right + P(14), y), Size = new Size(P(80), P(20))
             };
             lnkChange.Click += (s, e) => Browse();
             Controls.Add(lnkChange);
+            UpdatePathLabel();
 
-            y = lblPath.Bottom + P(26);
+            y = lblPath.Bottom + P(22);
         }
 
         chkShortcut = Check("Desktop shortcut & right-click menu", P(MARGIN), y,
             isUpdate ? DinaSetup.StateBool("Shortcut") : true);
         Controls.Add(chkShortcut);
 
-        chkDefault = Check("Make default player", P(MARGIN), chkShortcut.Bottom + P(14),
+        chkDefault = Check("Make default player", P(MARGIN), chkShortcut.Bottom + P(10),
             isUpdate && (DinaSetup.StateBool("SetDefault") || DinaSetup.IsDefaultNow()));
         Controls.Add(chkDefault);
 
-        int by = chkDefault.Bottom + P(28);
+        int by = chkDefault.Bottom + P(24);
 
         btnPrimary = new RoundButton {
             Text = isUpdate ? "Update" : "Install",
-            Location = new Point(P(MARGIN), by), Size = new Size(P(160), P(46)),
-            ForeColor = BTN_TEXT, Font = F(11.5f, FontStyle.Bold), Cursor = Hand(),
+            Location = new Point(P(MARGIN), by), Size = new Size(P(140), P(42)),
+            ForeColor = BTN_TEXT, Font = F(FS, FontStyle.Regular), Cursor = Hand(),
             Normal = TEXT, Hover = Color.FromArgb(0xE4, 0xE4, 0xE6),
-            Down = Color.FromArgb(0xCF, 0xCF, 0xD2), Bg = BG, Radius = P(12)
+            Down = Color.FromArgb(0xCF, 0xCF, 0xD2), Bg = BG, Radius = P(11)
         };
         btnPrimary.Click += (s, e) => DoPrimary();
         Controls.Add(btnPrimary);
@@ -182,29 +166,30 @@ class SetupForm : Form
         if (isUpdate)
         {
             lnkRemove = new LinkText {
-                Text = "Remove", Font = F(10f, FontStyle.Regular), Idle = MUTED, Hot = TEXT,
+                Text = "Remove", Font = F(FS, FontStyle.Regular), Idle = MUTED, Hot = TEXT,
                 ForeColor = MUTED, BackColor = Color.Transparent,
-                Location = new Point(btnPrimary.Right + P(32), by), Size = new Size(P(160), btnPrimary.Height)
+                Location = new Point(btnPrimary.Right + P(28), by), Size = new Size(P(160), btnPrimary.Height)
             };
             lnkRemove.Click += (s, e) => DoUninstall();
             Controls.Add(lnkRemove);
         }
 
-        // Download progress replaces the button row while running; hidden at rest,
-        // so there's no empty band and no status text sitting idle.
+        // Download progress replaces the button row while running — the slim bar
+        // and its caption on one line; hidden at rest, so no status text sits idle.
         bar = new SlimBar(SURFACE2, TEXT) {
-            Location = new Point(P(MARGIN), btnPrimary.Top + P(12)), Size = new Size(P(414), P(6)),
+            Location = new Point(P(MARGIN), by + (btnPrimary.Height - P(6)) / 2), Size = new Size(P(250), P(6)),
             Visible = false
         };
         Controls.Add(bar);
         lblStatus = new FlatLabel {
-            Text = "", Font = F(10f, FontStyle.Regular), ForeColor = TEXT, BackColor = Color.Transparent,
-            Location = new Point(P(MARGIN), btnPrimary.Top + P(24)), Size = new Size(P(414), P(20)),
+            Text = "", Font = F(FS, FontStyle.Regular), ForeColor = TEXT, BackColor = Color.Transparent,
+            Location = new Point(bar.Right + P(16), by),
+            Size = new Size(P(WIDTH - MARGIN) - bar.Right - P(16), btnPrimary.Height),
             Visible = false
         };
         Controls.Add(lblStatus);
 
-        ClientSize = new Size(P(WIDTH), btnPrimary.Bottom + P(24));
+        ClientSize = new Size(P(WIDTH), btnPrimary.Bottom + P(26));
         MouseDown += DragMove;
     }
 
@@ -222,23 +207,10 @@ class SetupForm : Form
         base.OnKeyDown(e);
     }
 
-    // ---- flat dark background (no watermark; the brand is the header icon) ----
+    // ---- flat dark background, no images ----
     protected override void OnPaintBackground(PaintEventArgs e)
     {
         e.Graphics.Clear(BG);
-    }
-
-    // Header app icon, drawn over the flat background beside the title label.
-    // (No window outline — the frameless dark window carries no border.)
-    protected override void OnPaint(PaintEventArgs e)
-    {
-        base.OnPaint(e);
-        if (_icon != null && !minimal && _iconRect.Width > 0)
-        {
-            e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            e.Graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-            e.Graphics.DrawImage(_icon, _iconRect);
-        }
     }
 
     protected override void OnShown(EventArgs e)
@@ -269,7 +241,6 @@ class SetupForm : Form
     // The minimal /autoupdate window: a slim bar and a single caption, nothing else.
     void BuildMinimal()
     {
-        minimal = true;
         int m = P(24), w = P(300);
         int cw = m + w + m;
 
@@ -291,7 +262,7 @@ class SetupForm : Form
         Controls.Add(slim);
 
         lblStatus = new FlatLabel {
-            Text = "Downloading…", Font = F(10f, FontStyle.Regular),
+            Text = "Downloading…", Font = F(FS, FontStyle.Regular),
             ForeColor = TEXT, BackColor = Color.Transparent,
             Location = new Point(m, slim.Bottom + P(14)), Size = new Size(w, P(20))
         };
@@ -363,6 +334,9 @@ class SetupForm : Form
     [DllImport("user32.dll")]
     static extern IntPtr LoadImage(IntPtr hinst, IntPtr name, uint type, int cx, int cy, uint load);
 
+    [DllImport("gdi32.dll")]
+    static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, ref uint pcFonts);
+
     [DllImport("dwmapi.dll")]
     static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int val, int size);
 
@@ -396,7 +370,7 @@ class SetupForm : Form
     {
         return new DarkCheck(TEXT, CHK_EDGE, TEXT, BG) {
             Text = text, Location = new Point(x, y), Size = new Size(P(414), P(24)), Checked = chk,
-            Font = F(9.5f, FontStyle.Regular), BackColor = BG
+            Font = F(FS, FontStyle.Regular), BackColor = BG
         };
     }
 
@@ -422,6 +396,11 @@ class SetupForm : Form
                 Marshal.Copy(data, 0, p, data.Length);
                 _pfc = new PrivateFontCollection();
                 _pfc.AddMemoryFont(p, data.Length); // p intentionally kept for app lifetime
+                // The text is drawn with TextRenderer (GDI), which can't see GDI+
+                // private fonts and silently fell back to Arial — register it with
+                // GDI as well (process-private, gone when the installer exits).
+                uint added = 0;
+                AddFontMemResourceEx(p, (uint)data.Length, IntPtr.Zero, ref added);
                 if (_pfc.Families.Length > 0) _inter = _pfc.Families[0];
             }
         }
@@ -441,48 +420,6 @@ class SetupForm : Form
             catch { }
         }
         return new Font("Segoe UI", size, style);
-    }
-
-    // Load an embedded .ico and return its largest frame as a bitmap we can
-    // downscale crisply to the header size at any DPI. dinaplayer.ico stores every
-    // frame as PNG, which the GDI Icon class decodes to garbage — so parse the
-    // icon directory ourselves and decode the biggest frame's PNG bytes directly.
-    static Image LoadIcon(string res)
-    {
-        try
-        {
-            byte[] b;
-            using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream(res))
-            {
-                if (s == null) return null;
-                using (var ms = new MemoryStream()) { s.CopyTo(ms); b = ms.ToArray(); }
-            }
-            int count = BitConverter.ToUInt16(b, 4);
-            int bestW = -1, bestOff = 0, bestLen = 0;
-            for (int i = 0; i < count; i++)
-            {
-                int o = 6 + i * 16;
-                int w = b[o] == 0 ? 256 : b[o];
-                if (w > bestW)
-                {
-                    bestW = w;
-                    bestLen = BitConverter.ToInt32(b, o + 8);
-                    bestOff = BitConverter.ToInt32(b, o + 12);
-                }
-            }
-            if (bestW < 0) return null;
-            bool isPng = bestLen > 8 && b[bestOff] == 0x89 && b[bestOff + 1] == 0x50
-                && b[bestOff + 2] == 0x4E && b[bestOff + 3] == 0x47;
-            if (isPng)
-                using (var fs = new MemoryStream(b, bestOff, bestLen))
-                using (var img = Image.FromStream(fs))
-                    return new Bitmap(img); // detached copy, so the stream can close
-            using (var ms2 = new MemoryStream(b))
-            using (var ico = new Icon(ms2, bestW, bestW))
-                return ico.ToBitmap(); // classic (uncompressed) frame
-        }
-        catch { }
-        return null;
     }
 
     void Browse()
@@ -513,7 +450,16 @@ class SetupForm : Form
         Cursor = Cursors.Default;
     }
 
-    void UpdatePathLabel() { if (lblPath != null) lblPath.Text = installDir; }
+    // The path label is as wide as the path (capped), with "Change" right after it.
+    void UpdatePathLabel()
+    {
+        if (lblPath == null) return;
+        lblPath.Text = installDir;
+        int w = TextRenderer.MeasureText(installDir, lblPath.Font, new Size(int.MaxValue, int.MaxValue),
+            TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix).Width;
+        lblPath.Width = Math.Min(w, P(WIDTH - 2 * MARGIN - 80));
+        lnkChange.Left = lblPath.Right + P(14);
+    }
 
     void DoPrimary()
     {
@@ -598,7 +544,7 @@ class FlatLabel : Label
     {
         TextRenderer.DrawText(e.Graphics, Text, Font, new Rectangle(0, 0, Width, Height), ForeColor,
             TextFormatFlags.Left | TextFormatFlags.VerticalCenter
-            | TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix);
+            | TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix | TextFormatFlags.PathEllipsis);
     }
 }
 

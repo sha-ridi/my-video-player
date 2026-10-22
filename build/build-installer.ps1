@@ -12,11 +12,9 @@ $out  = Join-Path $repo 'dist/DinaPlayer-Setup.exe'
 $icon = Join-Path $repo 'assets/dinasetup.ico'  # player face + wrench badge
 $src1 = Join-Path $repo 'installer/DinaSetup.cs'
 $src2 = Join-Path $repo 'installer/DinaSetupForm.cs'
-# Embedded assets: Inter font + the app icon (dinaplayer.ico) shown in the window
-# header, so it looks the same on any PC (no system font install needed).
-# Referenced by manifest name in code. ($icon above is the exe's own /win32icon.)
+# Embedded Inter font (the player's UI font), so the window looks the same on
+# any PC (no system font install needed). Referenced by manifest name in code.
 $font = Join-Path $repo 'portable_config/fonts/Inter.ttf'
-$hdricon = Join-Path $repo 'assets/dinaplayer.ico'
 # DPI-awareness manifest -> crisp window at 125%/150%/… display scaling.
 $manifest = Join-Path $repo 'installer/app.manifest'
 New-Item -ItemType Directory -Force -Path (Split-Path $out -Parent) | Out-Null
@@ -26,7 +24,7 @@ Remove-Item $out -Force -ErrorAction SilentlyContinue
     "/win32manifest:$manifest" `
     /reference:System.dll /reference:System.Windows.Forms.dll /reference:System.Drawing.dll `
     /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll `
-    "/resource:$font,Inter.ttf" "/resource:$hdricon,dinaicon.ico" `
+    "/resource:$font,Inter.ttf" `
     $src1 $src2
 if ($LASTEXITCODE -ne 0) { throw "csc failed with exit code $LASTEXITCODE" }
 
