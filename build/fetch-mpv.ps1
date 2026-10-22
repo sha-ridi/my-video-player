@@ -16,6 +16,9 @@ if (-not (Test-Path $sevenzr)) {
 
 # 2. Latest mpv Windows build (zhongfly ships mpv.exe + libmpv).
 $headers = @{ 'User-Agent' = 'dinaplayer-build' }
+# On CI the runner's IP is shared, so the anonymous API limit (60/h per IP) is
+# often already used up by others. Authenticated requests get their own limit.
+if ($env:GH_TOKEN) { $headers['Authorization'] = "Bearer $env:GH_TOKEN" }
 $rel = Invoke-RestMethod 'https://api.github.com/repos/zhongfly/mpv-winbuild/releases/latest' -Headers $headers
 $asset = $rel.assets |
     Where-Object { $_.name -like 'mpv-x86_64-*.7z' -and $_.name -notlike '*v3*' } |

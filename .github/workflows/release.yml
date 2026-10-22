@@ -33,6 +33,8 @@ jobs:
       # local dev environment exactly.
       - name: Build portable ZIP + installer
         shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }} # authenticated GitHub API calls in fetch-mpv.ps1
         run: .\build\build-release.ps1
 
       - name: Upload build artifacts
