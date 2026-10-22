@@ -1,8 +1,9 @@
 ```
 DinaPlayer
 video player for Windows
-mpv + uosc, preconfigured
 ```
+
+[`mpv`](https://mpv.io) `+` [`uosc`](https://github.com/tomasklaen/uosc)`, preconfigured`
 
 [`> download DinaPlayer-Setup.exe`](https://github.com/sha-ridi/my-video-player/releases/latest/download/DinaPlayer-Setup.exe)
 
